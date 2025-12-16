@@ -30,9 +30,8 @@ function CountrySearch({ onSearchClick }: CountrySearchProps) {
     try {
       const results = await searchCountryByName(searchTerm.trim())
       setCountries(results)
-    } catch (err) {
+    } catch (_err) {
       setError('Oops! Something went wrong. Please try again!')
-      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -51,6 +50,7 @@ function CountrySearch({ onSearchClick }: CountrySearchProps) {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search for a country... (e.g., France, Japan, Brazil)"
+            aria-label="Search for a country"
             className="search-input"
             disabled={loading}
           />

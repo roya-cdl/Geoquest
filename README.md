@@ -2,6 +2,11 @@
 
 A fun and interactive web application designed to help kids aged 8-12 learn geography! GeoQuest Kids uses the REST Countries API to display country information in a kid-friendly format.
 
+## 📚 Documentation
+
+- [Final Practical Assessment](./docs/lab-final-assessment.md) - Complete 40-minute practical guide for building the Daily Quiz Card feature
+
+
 ## ✨ Features
 
 - **Country Search**: Search for countries by name and discover interesting facts about them
@@ -36,7 +41,7 @@ A fun and interactive web application designed to help kids aged 8-12 learn geog
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/nishadhin/geo-quest-kids-app-lab
 cd geo-quest-kids-app-lab
 ```
 
@@ -67,6 +72,20 @@ To preview the production build:
 ```bash
 npm run preview
 ```
+
+## 🔧 Development
+
+### Linting
+
+Run ESLint to check for code issues:
+
+```bash
+npm run lint
+```
+
+### Type Checking
+
+TypeScript will automatically check types during development and build.
 
 ## 📁 Project Structure
 
@@ -117,59 +136,3 @@ geo-quest-kids-app-lab/
    - Click the "🌟 Country Spotlight" button
    - Currently shows an "under construction" message
    - This feature will be expanded in future updates
-
-## 🌐 API
-
-This application uses the [REST Countries API](https://restcountries.com/) to fetch country data. The API is free and doesn't require authentication.
-
-## 🎨 Design Features
-
-- **Kid-Friendly Colors**: Bright, engaging color scheme with gradients
-- **Large, Readable Text**: Easy-to-read fonts suitable for children
-- **Emoji Icons**: Visual indicators to make the interface more fun
-- **Smooth Animations**: Hover effects and transitions for better user experience
-- **Responsive Layout**: Adapts to different screen sizes
-
-## 🔧 Development
-
-### Linting
-
-Run ESLint to check for code issues:
-
-```bash
-npm run lint
-```
-
-### Type Checking
-
-TypeScript will automatically check types during development and build.
-
-## 📝 License
-
-This project is open source and available for educational purposes.
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to submit issues or pull requests.
-
-## 🎓 Educational Goals
-
-GeoQuest Kids aims to:
-- Make geography learning fun and interactive
-- Help children discover countries around the world
-- Present information in an age-appropriate format
-- Encourage curiosity about different cultures and places
-
-## 🔮 Future Enhancements
-
-- Complete the Country Spotlight feature with quizzes and fun facts
-- Add interactive maps
-- Include country comparison features
-- Add more visual content (photos, videos)
-- Implement learning games and challenges
-- Add progress tracking for young learners
-
----
-
-Made with ❤️ for curious young explorers!
-

@@ -35,9 +35,9 @@ Use this final practical to apply Cursor skills in one flow:
 
 ---
 
-## 2) Repo: geo-quest-kid-app
+## 2) Repo: geo-quest-kids-app-lab
 
-* `https://github.com/nishadhin/geo-quest-kid-app`
+* `https://github.com/nishadhin/geo-quest-kids-app-lab`
 
 ---
 
@@ -95,21 +95,33 @@ geo-quest-kids-app-lab/
 From repo root:
 
 ```bash
-git clone https://github.com/nishadhin/geo-quest-kid-app.git
-cd geo-quest-kid-app/geoquest-kids
+git clone https://github.com/nishadhin/geo-quest-kids-app-lab.git
+cd geo-quest-kids-app-lab
 
 npm install
 npm run dev
 ```
 
-**Important:** `package.json` is inside `geoquest-kids/`. Run commands from there.
+**Note:** `package.json` is at the repo root. All commands should be run from there.
 
-* Open the project in Cursor (open repo root `geo-quest-kid-app`)
+* Open the project in Cursor (open repo root `geo-quest-kids-app-lab`)
 * Confirm the app loads (e.g., `http://localhost:5173`)
 
 ---
 
 ## 4) Step-by-step practical flow
+
+### 0) Prerequisites
+
+Before starting, ensure you have:
+
+- **Node.js** version 18 or higher installed
+- **npm** or yarn package manager
+- **Cursor IDE** (latest version recommended)
+- A working internet connection (for API calls and Figma MCP)
+- The GeoQuest Kids app running locally at `http://localhost:5173`
+
+---
 
 ## Step 1 — Plan the new feature (5 min) — **Plan mode**
 
@@ -343,19 +355,30 @@ Using @browser, validate Daily Quiz Card on http://localhost:5173:
 
 ### Debug Mode (enabled) quick check
 
-If nothing is broken, intentionally introduce a tiny bug (then fix it):
+**Purpose:** This exercise demonstrates how to use Cursor's Debug Mode to investigate and fix issues. If everything works correctly after implementation, you'll intentionally introduce a small bug to practice the debugging workflow.
 
-* Example: clicking an answer doesn’t update feedback.
+**Option A: If you encounter a real bug during implementation**
+- Use Debug Mode to investigate and fix it
+- Document what you learned
+
+**Option B: If everything works (intentional bug for practice)**
+
+Introduce a temporary bug to practice debugging:
+1. In `DailyQuizCard.tsx`, comment out the line that updates the selected answer state
+2. Save the file and observe the broken behavior
+3. Use the prompt below to debug with Cursor
 
 Prompt (Ask mode with Debug Mode enabled):
 
 ```txt
-Debug Mode is enabled. Clicking an answer on Daily Quiz Card doesn’t show feedback.
+Debug Mode is enabled. Clicking an answer on Daily Quiz Card doesn't show feedback.
 1) Find where selection state is handled.
 2) Explain why the UI is not updating.
 3) Propose the smallest fix.
 4) Confirm the fix using @browser.
 ```
+
+**After debugging:** Restore the original code or apply the fix suggested by Cursor.
 
 ---
 
