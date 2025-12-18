@@ -1,5 +1,5 @@
 // Quiz API service for Daily Quiz Card
-// Mock-first implementation with deterministic daily quiz selection
+// Uses Open Trivia DB API: https://opentdb.com
 
 export interface QuizQuestion {
   id: string
@@ -20,115 +20,120 @@ export interface QuizResponse {
   source: 'mock' | 'api'
 }
 
-// Mock quiz data - geography questions for kids
-const MOCK_QUIZ_QUESTIONS: QuizQuestion[] = [
-  {
-    id: 'quiz-1',
-    question: 'Which country is known as the "Land of the Rising Sun"?',
-    category: 'Geography',
-    difficulty: 'easy',
-    type: 'multiple',
-    correctAnswer: 'Japan',
-    incorrectAnswers: ['China', 'South Korea', 'Thailand'],
-    allAnswers: ['Japan', 'China', 'South Korea', 'Thailand'],
-    explanation: 'Japan is called the "Land of the Rising Sun" because it is located to the east of Asia, where the sun rises.',
-    relatedCountry: 'Japan'
-  },
-  {
-    id: 'quiz-2',
-    question: 'What is the capital city of Australia?',
-    category: 'Geography',
-    difficulty: 'easy',
-    type: 'multiple',
-    correctAnswer: 'Canberra',
-    incorrectAnswers: ['Sydney', 'Melbourne', 'Brisbane'],
-    allAnswers: ['Canberra', 'Sydney', 'Melbourne', 'Brisbane'],
-    explanation: 'Canberra is the capital of Australia, even though Sydney and Melbourne are larger cities.',
-    relatedCountry: 'Australia'
-  },
-  {
-    id: 'quiz-3',
-    question: 'Which country is home to the Amazon Rainforest?',
-    category: 'Geography',
-    difficulty: 'medium',
-    type: 'multiple',
-    correctAnswer: 'Brazil',
-    incorrectAnswers: ['Peru', 'Colombia', 'Venezuela'],
-    allAnswers: ['Brazil', 'Peru', 'Colombia', 'Venezuela'],
-    explanation: 'Brazil contains about 60% of the Amazon Rainforest, the largest tropical rainforest in the world.',
-    relatedCountry: 'Brazil'
-  },
-  {
-    id: 'quiz-4',
-    question: 'What is the smallest country in the world by land area?',
-    category: 'Geography',
-    difficulty: 'medium',
-    type: 'multiple',
-    correctAnswer: 'Vatican City',
-    incorrectAnswers: ['Monaco', 'San Marino', 'Liechtenstein'],
-    allAnswers: ['Vatican City', 'Monaco', 'San Marino', 'Liechtenstein'],
-    explanation: 'Vatican City is the smallest country in the world, covering only about 0.17 square miles!'
-  },
-  {
-    id: 'quiz-5',
-    question: 'Which African country is famous for its wildlife safaris?',
-    category: 'Geography',
-    difficulty: 'easy',
-    type: 'multiple',
-    correctAnswer: 'Kenya',
-    incorrectAnswers: ['Egypt', 'South Africa', 'Nigeria'],
-    allAnswers: ['Kenya', 'Egypt', 'South Africa', 'Nigeria'],
-    explanation: 'Kenya is world-famous for its national parks and wildlife safaris, especially the Great Migration.',
-    relatedCountry: 'Kenya'
-  }
-]
+// Open Trivia DB API response types
+interface OpenTriviaResponse {
+  response_code: number
+  results: OpenTriviaQuestion[]
+}
+
+interface OpenTriviaQuestion {
+  category: string
+  type: 'multiple' | 'boolean'
+  difficulty: 'easy' | 'medium' | 'hard'
+  question: string // HTML entities need decoding
+  correct_answer: string // HTML entities need decoding
+  incorrect_answers: string[] // HTML entities need decoding
+}
+
+const API_URL = 'https://opentdb.com/api.php?amount=1&category=22&type=multiple'
+
+/**
+ * Decode HTML entities in strings
+ * Handles common entities like &quot;, &#039;, &amp;, etc.
+ */
+function decodeHtmlEntities(text: string): string {
+  const textarea = document.createElement('textarea')
+  textarea.innerHTML = text
+  return textarea.value
+}
 
 /**
  * Shuffle array using Fisher-Yates algorithm
- * Uses a seed for deterministic shuffling
  */
-function shuffleArray<T>(array: T[], seed: number): T[] {
+function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array]
-  let random = seed
-  
   for (let i = shuffled.length - 1; i > 0; i--) {
-    // Simple pseudo-random using seed
-    random = (random * 9301 + 49297) % 233280
-    const j = Math.floor((random / 233280) * (i + 1))
-    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  
   return shuffled
 }
 
 /**
- * Get a deterministic daily quiz question based on the date
+ * Transform Open Trivia DB response to our QuizQuestion interface
+ */
+function transformTriviaQuestion(apiQuestion: OpenTriviaQuestion): QuizQuestion {
+  const decodedQuestion = decodeHtmlEntities(apiQuestion.question)
+  const decodedCorrect = decodeHtmlEntities(apiQuestion.correct_answer)
+  const decodedIncorrect = apiQuestion.incorrect_answers.map(answer => decodeHtmlEntities(answer))
+  
+  // Combine and shuffle all answers
+  const allAnswers = shuffleArray([decodedCorrect, ...decodedIncorrect])
+  
+  return {
+    id: `trivia-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+    question: decodedQuestion,
+    category: apiQuestion.category,
+    difficulty: apiQuestion.difficulty,
+    type: apiQuestion.type,
+    correctAnswer: decodedCorrect,
+    incorrectAnswers: decodedIncorrect,
+    allAnswers
+  }
+}
+
+/**
+ * Get a daily quiz question from Open Trivia DB
+ * Falls back to a friendly error message if the API fails
  * @param date - Optional date parameter for testing determinism (defaults to current date)
  * @returns QuizResponse with the daily question
  */
 export async function getDailyQuizQuestion(date: Date = new Date()): Promise<QuizResponse> {
-  // Use UTC date string as seed for deterministic selection
-  const dateString = date.toISOString().split('T')[0] // YYYY-MM-DD
-  const daySeed = dateString.split('-').reduce((acc, val) => acc + parseInt(val, 10), 0)
-  
-  // Select question based on day of year (deterministic)
-  const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 0).getTime()) / 86400000)
-  const questionIndex = dayOfYear % MOCK_QUIZ_QUESTIONS.length
-  const selectedQuestion = MOCK_QUIZ_QUESTIONS[questionIndex]
-  
-  // Shuffle answers deterministically using date as seed
-  const shuffledAnswers = shuffleArray(
-    [selectedQuestion.correctAnswer, ...selectedQuestion.incorrectAnswers],
-    daySeed
-  )
-  
-  return {
-    question: {
-      ...selectedQuestion,
-      allAnswers: shuffledAnswers
-    },
-    timestamp: date.getTime(),
-    source: 'mock'
+  try {
+    const response = await fetch(API_URL)
+    
+    if (!response.ok) {
+      throw new Error(`API returned status ${response.status}`)
+    }
+    
+    const data = await response.json() as OpenTriviaResponse
+    
+    // Check response code (0 = success)
+    if (data.response_code !== 0) {
+      throw new Error(`API returned response code ${data.response_code}`)
+    }
+    
+    // Check if we have results
+    if (!data.results || data.results.length === 0) {
+      throw new Error('No quiz questions available')
+    }
+    
+    const transformedQuestion = transformTriviaQuestion(data.results[0])
+    
+    return {
+      question: transformedQuestion,
+      timestamp: date.getTime(),
+      source: 'api'
+    }
+  } catch {
+    // Return a fallback question with a friendly message
+    const fallbackQuestion: QuizQuestion = {
+      id: 'fallback-quiz',
+      question: 'Oops! We couldn\'t load a new quiz question right now. Try again in a moment! 🌍',
+      category: 'Geography',
+      difficulty: 'easy',
+      type: 'multiple',
+      correctAnswer: 'Try Again',
+      incorrectAnswers: ['Refresh Page', 'Check Internet', 'Wait a Bit'],
+      allAnswers: shuffleArray(['Try Again', 'Refresh Page', 'Check Internet', 'Wait a Bit']),
+      explanation: 'Sometimes the quiz service needs a quick break. Don\'t worry, you can try searching for countries instead!'
+    }
+    
+    return {
+      question: fallbackQuestion,
+      timestamp: date.getTime(),
+      source: 'api'
+    }
   }
 }
 
