@@ -6,9 +6,10 @@ import CountryCard from './CountryCard'
 
 interface CountrySearchProps {
   onSearchClick: () => void
+  onSearch?: () => void
 }
 
-function CountrySearch({ onSearchClick }: CountrySearchProps) {
+function CountrySearch({ onSearchClick, onSearch }: CountrySearchProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(false)
@@ -26,6 +27,10 @@ function CountrySearch({ onSearchClick }: CountrySearchProps) {
     setError(null)
     setHasSearched(true)
     setCountries([])
+
+    if (onSearch) {
+      onSearch()
+    }
 
     try {
       const results = await searchCountryByName(searchTerm.trim())

@@ -1,5 +1,5 @@
-// Mock Countries API service
-// Students will replace this with real REST Countries API in Step 5
+// Countries API service with pre-loading and caching
+// Uses REST Countries API: https://restcountries.com
 
 export interface Country {
   name: {
@@ -21,84 +21,146 @@ export interface Country {
   borders?: string[]
 }
 
-// Mock data for initial implementation
-const MOCK_COUNTRIES: Country[] = [
-  {
-    name: { common: 'France', official: 'French Republic' },
-    capital: ['Paris'],
-    region: 'Europe',
-    subregion: 'Western Europe',
-    population: 67390000,
-    area: 551695,
-    flags: { png: 'https://flagcdn.com/w320/fr.png', svg: 'https://flagcdn.com/fr.svg', alt: 'Flag of France' },
-    currencies: { EUR: { name: 'Euro', symbol: '€' } },
-    languages: { fra: 'French' },
-    borders: ['AND', 'BEL', 'DEU', 'ITA', 'LUX', 'MCO', 'ESP', 'CHE']
-  },
-  {
-    name: { common: 'Japan', official: 'Japan' },
-    capital: ['Tokyo'],
-    region: 'Asia',
-    subregion: 'Eastern Asia',
-    population: 125836021,
-    area: 377930,
-    flags: { png: 'https://flagcdn.com/w320/jp.png', svg: 'https://flagcdn.com/jp.svg', alt: 'Flag of Japan' },
-    currencies: { JPY: { name: 'Japanese yen', symbol: '¥' } },
-    languages: { jpn: 'Japanese' },
-    borders: []
-  },
-  {
-    name: { common: 'Brazil', official: 'Federative Republic of Brazil' },
-    capital: ['Brasília'],
-    region: 'Americas',
-    subregion: 'South America',
-    population: 212559417,
-    area: 8515767,
-    flags: { png: 'https://flagcdn.com/w320/br.png', svg: 'https://flagcdn.com/br.svg', alt: 'Flag of Brazil' },
-    currencies: { BRL: { name: 'Brazilian real', symbol: 'R$' } },
-    languages: { por: 'Portuguese' },
-    borders: ['ARG', 'BOL', 'COL', 'GUF', 'GUY', 'PRY', 'PER', 'SUR', 'URY', 'VEN']
-  },
-  {
-    name: { common: 'Australia', official: 'Commonwealth of Australia' },
-    capital: ['Canberra'],
-    region: 'Oceania',
-    subregion: 'Australia and New Zealand',
-    population: 25687041,
-    area: 7692024,
-    flags: { png: 'https://flagcdn.com/w320/au.png', svg: 'https://flagcdn.com/au.svg', alt: 'Flag of Australia' },
-    currencies: { AUD: { name: 'Australian dollar', symbol: '$' } },
-    languages: { eng: 'English' },
-    borders: []
-  },
-  {
-    name: { common: 'Kenya', official: 'Republic of Kenya' },
-    capital: ['Nairobi'],
-    region: 'Africa',
-    subregion: 'Eastern Africa',
-    population: 53771296,
-    area: 580367,
-    flags: { png: 'https://flagcdn.com/w320/ke.png', svg: 'https://flagcdn.com/ke.svg', alt: 'Flag of Kenya' },
-    currencies: { KES: { name: 'Kenyan shilling', symbol: 'Sh' } },
-    languages: { eng: 'English', swa: 'Swahili' },
-    borders: ['ETH', 'SOM', 'SSD', 'TZA', 'UGA']
+// REST Countries API response type (what we receive from the API)
+interface RestCountryResponse {
+  name: {
+    common: string
+    official: string
   }
-]
+  cca2: string
+  capital?: string[]
+  region: string
+  subregion?: string
+  population: number
+  area?: number
+  flags: {
+    png: string
+    svg: string
+    alt?: string
+  }
+  currencies?: Record<string, { name: string; symbol: string }>
+  languages?: Record<string, string>
+  borders?: string[]
+}
 
-// Simulate network delay for realistic UX
-const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+// In-memory cache for countries
+interface CountriesCache {
+  countries: Country[] | null
+  loading: Promise<Country[]> | null
+  error: Error | null
+}
 
+const cache: CountriesCache = {
+  countries: null,
+  loading: null,
+  error: null
+}
+
+const API_URL = 'https://restcountries.com/v3.1/all?fields=name,cca2,flags,region,subregion,capital,population,area,languages,currencies,borders'
+
+/**
+ * Transform REST Countries API response to our Country interface
+ */
+function transformCountry(apiCountry: RestCountryResponse): Country {
+  return {
+    name: {
+      common: apiCountry.name.common,
+      official: apiCountry.name.official
+    },
+    capital: apiCountry.capital,
+    region: apiCountry.region,
+    subregion: apiCountry.subregion,
+    population: apiCountry.population,
+    area: apiCountry.area ?? 0, // Default to 0 if area not provided
+    flags: {
+      png: apiCountry.flags.png,
+      svg: apiCountry.flags.svg,
+      alt: apiCountry.flags.alt
+    },
+    currencies: apiCountry.currencies,
+    languages: apiCountry.languages,
+    borders: apiCountry.borders
+  }
+}
+
+/**
+ * Pre-load all countries from REST Countries API
+ * Caches results in memory for subsequent searches
+ */
+async function preloadCountries(): Promise<Country[]> {
+  // If already loading, return the existing promise
+  if (cache.loading) {
+    return cache.loading
+  }
+
+  // If already cached, return cached data
+  if (cache.countries) {
+    return cache.countries
+  }
+
+  // If previous load failed, clear error and retry
+  if (cache.error) {
+    cache.error = null
+  }
+
+  // Create loading promise
+  const loadPromise = fetch(API_URL)
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch countries: ${response.status} ${response.statusText}`)
+      }
+
+      const apiCountries = await response.json() as RestCountryResponse[]
+      const transformedCountries = apiCountries.map(transformCountry)
+
+      // Cache the results
+      cache.countries = transformedCountries
+      cache.loading = null
+
+      return transformedCountries
+    })
+    .catch((error) => {
+      cache.error = error instanceof Error ? error : new Error('Unknown error loading countries')
+      cache.loading = null
+      throw cache.error
+    })
+
+  cache.loading = loadPromise
+  return loadPromise
+}
+
+/**
+ * Search countries by name using cached data
+ * Pre-loads countries on first call if cache is empty
+ */
 export async function searchCountryByName(name: string): Promise<Country[]> {
   if (!name.trim()) {
     return []
   }
 
-  // Simulate network delay (300-600ms)
-  await simulateDelay(300 + Math.random() * 300)
+  // Ensure countries are loaded
+  if (!cache.countries && !cache.loading) {
+    await preloadCountries()
+  }
 
-  // Filter mock data by name (case-insensitive partial match)
+  // If still loading, wait for it
+  if (cache.loading) {
+    await cache.loading
+  }
+
+  // If error occurred, throw it
+  if (cache.error) {
+    throw cache.error
+  }
+
+  // If no countries cached (shouldn't happen, but handle gracefully)
+  if (!cache.countries) {
+    return []
+  }
+
+  // Filter cached countries by name (case-insensitive partial match)
   const searchLower = name.toLowerCase().trim()
-  const results = MOCK_COUNTRIES.filter(country =>
+  const results = cache.countries.filter(country =>
     country.name.common.toLowerCase().includes(searchLower) ||
     country.name.official.toLowerCase().includes(searchLower)
   )
