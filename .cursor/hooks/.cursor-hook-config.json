@@ -1,0 +1,12 @@
+{
+  "hooks": [
+    {
+      "name": "check-console-log",
+      "trigger": "agent-propose-change",
+      "filePattern": "\\.(ts|tsx)$",
+      "script": "check-console-log.js",
+      "message": "⚠️  Hook warning: console.log found in proposed changes for GeoQuest Kids. Remove it before commit."
+    }
+  ]
+}
+
