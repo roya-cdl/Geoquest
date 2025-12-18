@@ -15,7 +15,7 @@
 | 2    | Add Rule + Command + Hook (must run)                       | 8 min  | Manual + **Agent**    |
 | 3    | Figma spec via MCP (fallback allowed)                      | 5 min  | **Agent**             |
 | 4    | Implement Daily Quiz Card (mock-first, deterministic)      | 10 min | **Agent**             |
-| 5    | Optimize country search (pre-load + cache)                  | 5 min  | **Agent**             |
+| 5    | Optimize country search (pre-load + cache)                 | 5 min  | **Agent**             |
 | 6    | Swap quiz mock → Open Trivia DB (real API) + minimal tests | 5 min  | **Agent**             |
 | 7    | Validate with `@browser` + Debug Mode quick fix            | 2 min  | **Agent** + **Debug** |
 
@@ -150,7 +150,7 @@ Please:
 
 ### 2A) Rule (Agent) — `geoquest-quality-and-determinism`
 
-Create: `.cursor/rules/geoquest-quality-and-determinism.md`
+Create: `.cursor/rules/geoquest-quality-and-determinism.mdc`
 
 Prompt (Agent mode):
 
@@ -214,7 +214,7 @@ Figma reference:
 ### Prompt (Agent mode, if Figma MCP is available)
 
 ```txt
-Using Figma MCP, extract the layout + tokens needed to implement a "Daily Quiz Card" in GeoQuest Kids.
+Using Figma MCP, extract the layout + tokens needed to implement a "Daily Quiz Card" in GeoQuest Kids from https://www.figma.com/design/MU79nBPJJvX3s8PjCla3kI/Learning-App-For-Kids--Community-?node-id=0-1&p=f&t=pAYh2vRNjApzbkck-0.
 
 1) Create the directory docs/figma-design/ if it doesn't exist.
 2) Create or update docs/figma-design/geoquest-figma-design-spec.md with a new section for the Daily Quiz Card:
@@ -226,12 +226,16 @@ Using Figma MCP, extract the layout + tokens needed to implement a "Daily Quiz C
 
 ### Fallback (manual, if Figma MCP isn't configured)
 
-```txt
 1) Create the directory docs/figma-design/ if it doesn't exist.
-2) Open the Figma URL in your browser and manually create/update docs/figma-design/geoquest-figma-design-spec.md:
-   - Describe the Daily Quiz Card layout in bullets
-   - Note approximate colors/typography (or mark assumptions)
-   - Keep it under 1 page and note uncertainties
+
+### Prompt (Agent mode, if Figma MCP is available)
+
+```txt
+1) Using images inside figma-designs-screenshots folder, extract the layout + tokens needed to implement a "Daily Quiz Card" in GeoQuest Kids from
+2) Create or update docs/figma-design/geoquest-figma-design-spec.md with a new section for the Daily Quiz Card:
+   - layout structure (header, question, 4 options, feedback area, CTA)
+   - spacing, colors, typography (use tokens/variables if present)
+   - accessibility notes (contrast, button sizes, headings)
 ```
 
 ---
@@ -247,7 +251,7 @@ Implement:
 Prompt (Agent mode):
 
 ```txt
-Implement the “Daily Quiz Card” feature:
+Implement the “Daily Quiz Card” feature using daily-quiz-card-plan.md:
 
 1) Add src/services/quizApi.ts that returns a deterministic “daily” quiz question using mock data.
    - Daily logic must allow injecting Date into pure functions for test determinism.
